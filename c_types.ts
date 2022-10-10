@@ -286,14 +286,15 @@ export class Func {
 export class StructConst {
     structDef: StructDef;
     name: string;
-    parms: string[] = [];
+    vals: any = {};
 
-    constructor(structDef: StructDef, name: string, parms: string[]) {
+    constructor(structDef: StructDef, name: string, vals: any) {
         this.structDef = structDef;
         this.name = name;
-        this.parms = parms;
+        this.vals = vals;
     }
 }
+
 // let structs: {[key: string]: StructDef} = {};
 
 
@@ -317,13 +318,7 @@ export class Exporter {
         return s;
     }
 
-    DefStructConst(structDef: StructDef, name: string, vals: any): any {
-        // ____exports.RAYWHITE = Color:new({r = 245, g = 245, b = 245, a = 245})
-        let parms = [];
-        for (let key in vals) {
-            parms.push(`${key} = ${vals[key]}`);
-        }
-
-        this.structConsts.push(new StructConst(structDef, name, parms));
+    DefStructConst(name: string, structDef: StructDef, vals: any): any {
+        this.structConsts.push(new StructConst(structDef, name, vals));
     }
 }

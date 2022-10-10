@@ -2,10 +2,6 @@ import {Exporter, StructConst, StructDef} from "./c_types";
 
 import * as fs from "fs";
 
-export function ExportStructConst(s: StructConst) {
-    console.log(`____exports.${s.name} = ${s.structDef.name}:new({${s.parms.join(", ")}})`)
-}
-
 export class LuaExporter {
     luaPath: string;
     luaFile: fs.WriteStream;
@@ -66,13 +62,15 @@ end`);
             this.ExportStruct(s);
         }
 
-        // for(let s of e.structConsts) {
-        //     ExportStructConst(s);
-        // }
-        //
-        // for(let s of e.globalFunctions) {
-        //     ExportGlobalFunction(s);
-        // }
+        for(let s of this.exporter.structConsts) {
+            let parms = [];
+            for(let member of s.structDef.members) {
+                parms.push(`${member.name} = ${s.vals[member.name]}`);
+            }
+
+            // ____exports.RAYWHITE = Color:new({r = 245, g = 245, b = 245, a = 255})
+            this.WriteLua(`____exports.${s.name} = ${s.structDef.name}:new({${parms.join(", ")}})`);
+        }
 
         this.WriteLua("return ____exports")
         this.WriteLua("end")

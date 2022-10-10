@@ -168,7 +168,7 @@ export class CExporter {
 
         for(let s of this.exporter.globalFunctions) {
             this.WriteC(`\tlua_pushcfunction(L, l_${s.name});`)
-            this.WriteC(`\tlua_setfield(L, -2, l_"${s.name}");`)
+            this.WriteC(`\tlua_setfield(L, -2, "${s.name}");`)
         }
 
         this.WriteC(`\tlua_setglobal(L, "rl");`);

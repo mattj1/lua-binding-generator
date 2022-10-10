@@ -16,8 +16,15 @@ let Color = e.DefStruct("Color")
     .Int("g")
     .Int("b")
     .Int("a");
-//
-// e.DefStructConst(Color, "RAYWHITE", {r : 245, g : 245, b : 245, a : 255})
+
+/*
+    // What if we didn't want to allocate data for stuff that's already in the header?
+    // Allocate Color table, set light userdata to &RAYWHITE
+
+ */
+e.DefStructConst("BLUE", Color,{r : 0, g : 0, b : 245, a : 255})
+e.DefStructConst("RAYWHITE", Color,{r : 245, g : 245, b : 245, a : 255})
+
 let Vector2 = e.DefStruct("Vector2")
     .Float("x")
     .Float("y");
