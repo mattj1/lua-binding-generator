@@ -39,13 +39,15 @@ export class ExportUtil {
 
     ExportStruct_Lua(s: StructDef) {
         this.WriteLua(`-- ${s.name}`);
-        this.WriteLua(`${s.name} = {}`);
+        this.WriteLua(`local ${s.name} = {}`);
         this.WriteLua(`${s.name}.prototype = {}`);
         this.WriteLua(`${s.name}.read_bindings = {}`);
         this.WriteLua(`${s.name}.write_bindings = {}`);
         for (let m of s.members) {
-            this.WriteLua(`${s.name}.read_bindings.${m.name} = function(t) return rl["@"]["${s.name}_read_${m.name}"](rawget(t, "@")) end`);
-            this.WriteLua(`${s.name}.write_bindings.${m.name} = function(t, v) return rl["@"]["${s.name}_write_${m.name}"](rawget(t, "@"), v) end`);
+            // this.WriteLua(`${s.name}.read_bindings.${m.name} = function(t) return rl["@"]["${s.name}_read_${m.name}"](rawget(t, "@")) end`);
+            this.WriteLua(`${s.name}.read_bindings.${m.name} = rl["@"]["${s.name}_read_${m.name}"]`);
+            // this.WriteLua(`${s.name}.write_bindings.${m.name} = function(t, v) return rl["@"]["${s.name}_write_${m.name}"](rawget(t, "@"), v) end`);
+            this.WriteLua(`${s.name}.write_bindings.${m.name} = rl["@"]["${s.name}_write_${m.name}"]`);
         }
 
         this.WriteLua(`${s.name}.mt = {
@@ -54,12 +56,17 @@ export class ExportUtil {
     }`);
 
         this.WriteLua(`
-function ${s.name}:new(o)
-    o = o or {}
+function ${s.name}:new(args)
+    o = {}
     setmetatable(o, ${s.name}.mt)
 
     d = rl["@"]["${s.name}_Alloc"]()
     rawset(o, "@", d)
+    if args then
+        for a0, a1 in pairs(args) do
+            o[a0] = a1
+        end
+     end
     return o
 end
     `);
@@ -151,8 +158,6 @@ end
     ExportC(e: Exporter) {
         let rw_methods = ["read", "write"];
 
-
-
         this.WriteC(`#include <cstring>`);
         this.WriteC(`#include "raylib.h"`);
         this.WriteC(`extern "C" {`);
@@ -168,7 +173,6 @@ end
                 // auto x = val->x;
                 // _val->x
                 let userdata_proj = new StructuredProjectionExpression(userdata_parm, m);
-
 
                 let returnVals = [1, 0];
                 let stackPos = [-1, -2];
@@ -189,7 +193,8 @@ end
                     } else {
                         let member_parm = new ParmType(`_${m.name}`, m.typeDef);
 
-                        this.WriteC('\t' + m.generateLuaGetParm(member_parm, "???", -1));
+                        this.WriteC('\t' + m.generateLuaGetParm(member_parm, "???", -2));
+
                         // "_val->x = x;"
                         this.WriteC(`\t${userdata_proj.ToString()} = ${member_parm.name};\n`);
                     }
@@ -210,7 +215,6 @@ end
             this.ExportGlobalFunction_C(s);
         }
 
-
         this.WriteC(`void init_raylib_bindings1(lua_State *L) {`);
         this.WriteC(`\tlua_createtable(L, 0, 200);`);
         this.WriteC(`\tlua_createtable(L, 0, 200);`);
@@ -230,6 +234,12 @@ end
         }
 
         this.WriteC(`\tlua_pop(L, 1);`);
+
+        for(let s of e.globalFunctions) {
+            this.WriteC(`\tlua_pushcfunction(L, l_${s.name});`)
+            this.WriteC(`\tlua_setfield(L, -2, l_"${s.name}");`)
+        }
+
         this.WriteC(`\tlua_setglobal(L, "rl");`);
         this.WriteC(`}\n`);
 

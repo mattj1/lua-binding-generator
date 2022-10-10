@@ -1,6 +1,8 @@
 import {Exporter, IntType, ParmType, StringType} from "./c_types";
 import {ExportUtil} from "./Export";
 
+let e = new Exporter();
+
 // DefStruct("Rectangle")
 //     .Int("x")
 //     .Int("y")
@@ -8,13 +10,11 @@ import {ExportUtil} from "./Export";
 //     .Int("h");
 //
 
-let e = new Exporter();
-
-// let Color = e.DefStruct("Color")
-//     .Int("r")
-//     .Int("g")
-//     .Int("b")
-//     .Int("a");
+let Color = e.DefStruct("Color")
+    .Int("r")
+    .Int("g")
+    .Int("b")
+    .Int("a");
 //
 // e.DefStructConst(Color, "RAYWHITE", {r : 245, g : 245, b : 245, a : 255})
 let Vector2 = e.DefStruct("Vector2")
@@ -53,12 +53,12 @@ let Vector2 = e.DefStruct("Vector2")
 //     .Return(new StringType())
 //
 // // void DrawText(const char *text, int posX, int posY, int fontSize, Color color);
-// e.DefGlobalFunction("DrawText")
-//     .Parm(new StringType().Const(), "text")
-//     .IntParm("posX")
-//     .IntParm("posY")
-//     .IntParm("fontSize")
-//     .Parm(Color, "color")
+e.DefGlobalFunction("DrawText")
+    .Parm(new StringType().Const(), "text")
+    .IntParm("posX")
+    .IntParm("posY")
+    .IntParm("fontSize")
+    .Parm(Color, "color")
 
 let e1 = new ExportUtil("test.c", "test.lua");
 e1.Run(e);

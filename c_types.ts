@@ -109,12 +109,38 @@ export class StructDef extends TypeDef {
     }
 
     generateLuaTo(var_parm: ParmType, funcName: string, parm: ParmType, stackPos: number) {
-        let s = `\tif(!lua_isuserdata(L, ${stackPos})) {\n`;
+        /*
+                if(!lua_istable(L, -1)) {                                   (stackPos)
+                    printf("Color_read_r: Not a table\n");
+                    return 0;
+                }
+
+                lua_pushstring(L, "@"); lua_rawget(L, -2);                  (stackPos-1)
+
+                if(!lua_isuserdata(L, -1)) {                                (-1)
+                    printf("Color_read_r: Error: r is not userdata\n");
+                    return 0;
+                }
+
+                Color * _userdata = (Color *) lua_touserdata(L, -1);        (-1)
+         */
+
+
+        let s = "";
+
+        s += `\tif(!lua_istable(L, ${stackPos})) {\n`;
+        s += `\t\tprintf("${funcName}: Error: Not a table\\n");\n`
+        s += `\t\treturn 0;\n`;
+        s += `\t}\n`;
+
+        s += `\tlua_pushstring(L, "@"); lua_rawget(L, ${stackPos - 1});\n`
+
+        s += `\tif(!lua_isuserdata(L, -1)) {\n`;
         s += `\t\tprintf("${funcName}: Error: ${parm.name} is not userdata\\n");\n`;
         s += `\t\treturn 0;\n`;
         s += `\t}\n`;
 
-        s += `\t${var_parm.ToString()} = (${var_parm.typeDef.name}) lua_touserdata(L, ${stackPos});\n`;
+        s += `\t${var_parm.ToString()} = (${var_parm.typeDef.name}) lua_touserdata(L, -1);\n`;
 
         return s;
     }
