@@ -11,25 +11,15 @@ import {
 } from "./c_types";
 import * as fs from "fs";
 
-export function ExportStructConst(s: StructConst) {
-    console.log(`____exports.${s.name} = ${s.structDef.name}:new({${s.parms.join(", ")}})`)
-}
 
-export class ExportUtil {
+export class CExporter {
     cPath: string;
-    luaPath: string;
-
     cFile: fs.WriteStream;
-    luaFile: fs.WriteStream;
+    exporter: Exporter;
 
-    constructor(cPath: string, luaPath: string) {
+    constructor(cPath: string, exporter: Exporter) {
         this.cPath = cPath;
-        this.luaPath = luaPath;
-    }
-
-    WriteLua(s: String) {
-        console.log(`lua: ${s}`)
-        this.luaFile.write(s + "\n");
+        this.exporter = exporter;
     }
 
     WriteC(s: String) {
@@ -37,69 +27,7 @@ export class ExportUtil {
         this.cFile.write(s + "\n");
     }
 
-    ExportStruct_Lua(s: StructDef) {
-        this.WriteLua(`-- ${s.name}`);
-        this.WriteLua(`local ${s.name} = {}`);
-        this.WriteLua(`${s.name}.prototype = {}`);
-        this.WriteLua(`${s.name}.read_bindings = {}`);
-        this.WriteLua(`${s.name}.write_bindings = {}`);
-        for (let m of s.members) {
-            // this.WriteLua(`${s.name}.read_bindings.${m.name} = function(t) return rl["@"]["${s.name}_read_${m.name}"](rawget(t, "@")) end`);
-            this.WriteLua(`${s.name}.read_bindings.${m.name} = rl["@"]["${s.name}_read_${m.name}"]`);
-            // this.WriteLua(`${s.name}.write_bindings.${m.name} = function(t, v) return rl["@"]["${s.name}_write_${m.name}"](rawget(t, "@"), v) end`);
-            this.WriteLua(`${s.name}.write_bindings.${m.name} = rl["@"]["${s.name}_write_${m.name}"]`);
-        }
-
-        this.WriteLua(`${s.name}.mt = {
-    \t __index = function(t, k) return ${s.name}.read_bindings[k](t) end,
-    \t __newindex = function(t, k, v) ${s.name}.write_bindings[k](t, v) end
-    }`);
-
-        this.WriteLua(`
-function ${s.name}:new(args)
-    o = {}
-    setmetatable(o, ${s.name}.mt)
-
-    d = rl["@"]["${s.name}_Alloc"]()
-    rawset(o, "@", d)
-    if args then
-        for a0, a1 in pairs(args) do
-            o[a0] = a1
-        end
-     end
-    return o
-end
-    `);
-        this.WriteLua(`____exports.${s.name} = ${s.name}`)
-    }
-
-    private ExportLua(e: Exporter) {
-        fs.truncateSync(this.luaPath, 0);
-        this.luaFile = fs.createWriteStream(this.luaPath);
-
-        this.WriteLua("return function(____exports)")
-
-        for(let s of e.structs) {
-            this.ExportStruct_Lua(s);
-        }
-
-        // for(let s of e.structConsts) {
-        //     ExportStructConst(s);
-        // }
-        //
-        // for(let s of e.globalFunctions) {
-        //     ExportGlobalFunction(s);
-        // }
-
-        this.WriteLua("return ____exports")
-        this.WriteLua("end")
-
-        this.luaFile.on('finish', () => {
-            console.log("done");
-        });
-    }
-
-    ExportGlobalFunction_C(func: Func) {
+    ExportGlobalFunction(func: Func) {
         this.WriteC(`static int l_${func.name}(lua_State *L) {`);
         let parm_count = func.parms.length;
         let args = [];
@@ -155,7 +83,10 @@ end
         this.WriteC(`}`);
     }
 
-    ExportC(e: Exporter) {
+    Run() {
+        fs.truncateSync(this.cPath, 0);
+        this.cFile = fs.createWriteStream(this.cPath);
+
         let rw_methods = ["read", "write"];
 
         this.WriteC(`#include <cstring>`);
@@ -165,7 +96,7 @@ end
         this.WriteC(`#include <lua/lualib.h>`);
         this.WriteC(`}`);
 
-        for(let s of e.structs) {
+        for(let s of this.exporter.structs) {
             let userdata_parm = new ParmType("_userdata", new PointerType(s));
 
             for (let m of s.members) {
@@ -211,8 +142,8 @@ end
             this.WriteC(`}\n`);
         }
 
-        for(let s of e.globalFunctions) {
-            this.ExportGlobalFunction_C(s);
+        for(let s of this.exporter.globalFunctions) {
+            this.ExportGlobalFunction(s);
         }
 
         this.WriteC(`void init_raylib_bindings1(lua_State *L) {`);
@@ -220,7 +151,7 @@ end
         this.WriteC(`\tlua_createtable(L, 0, 200);`);
         this.WriteC(`\tlua_setfield(L, -2, "@");`);
         this.WriteC(`\tlua_getfield(L, -1, "@");`);
-        for(let s of e.structs) {
+        for(let s of this.exporter.structs) {
             for (let m of s.members) {
                 for(let i = 0; i < 2; i++) {
                     let method_name = `${s.name}_${rw_methods[i]}_${m.name}`;
@@ -235,7 +166,7 @@ end
 
         this.WriteC(`\tlua_pop(L, 1);`);
 
-        for(let s of e.globalFunctions) {
+        for(let s of this.exporter.globalFunctions) {
             this.WriteC(`\tlua_pushcfunction(L, l_${s.name});`)
             this.WriteC(`\tlua_setfield(L, -2, l_"${s.name}");`)
         }
@@ -246,16 +177,7 @@ end
         this.cFile.on('finish', () => {
             console.log("done");
         });
-    }
-
-    Run(e: Exporter) {
-        fs.truncateSync(this.cPath, 0);
-        this.cFile = fs.createWriteStream(this.cPath);
-
-        this.ExportLua(e)
-        this.ExportC(e);
 
         // fs.closeSync(this.cFile);
-        // fs.closeSync(this.luaFile);
     }
 }

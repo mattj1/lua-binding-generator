@@ -1,5 +1,6 @@
 import {Exporter, IntType, ParmType, StringType} from "./c_types";
-import {ExportUtil} from "./Export";
+import {LuaExporter} from "./LuaExporter";
+import {CExporter} from "./CExporter";
 
 let e = new Exporter();
 
@@ -60,5 +61,8 @@ e.DefGlobalFunction("DrawText")
     .IntParm("fontSize")
     .Parm(Color, "color")
 
-let e1 = new ExportUtil("test.c", "test.lua");
-e1.Run(e);
+let cExporter = new CExporter("test.c", e);
+cExporter.Run();
+
+let luaExporter = new LuaExporter("test.lua", e);
+luaExporter.Run();
