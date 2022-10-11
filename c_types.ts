@@ -1,9 +1,14 @@
 abstract class TypeDef {
-    public name: string;
+    protected _name: string;
+
+    get name(): string {
+        return this._name;
+    }
+
     isConst: boolean;
 
     protected constructor(name: string) {
-        this.name = name;
+        this._name = name;
         this.isConst = false;
     }
 
@@ -53,6 +58,15 @@ export class StringType extends TypeDef {
     isPointerType(): boolean {
         return true;
     }
+
+
+    get name(): string {
+        if(this.isConst) {
+            return "const char *";
+        }
+
+        return "char *";
+    }
 }
 
 export class IntType extends SimpleTypeDef {
@@ -67,6 +81,20 @@ export class IntType extends SimpleTypeDef {
 
     generateLuaPush(expr: Expr): string {
         return `lua_pushinteger(L, ${expr.ToString()})`;
+    }
+}
+
+export class BoolType extends SimpleTypeDef {
+    constructor() {
+        super("bool");
+    }
+
+    generateLuaTo(var_parm: ParmType, funcName: string, parm: ParmType, stackPos: number) {
+        return `${var_parm.ToString()} = lua_toboolean(L, ${stackPos});`
+    }
+
+    generateLuaPush(expr: Expr): string {
+        return `lua_pushboolean(L, ${expr.ToString()})`;
     }
 }
 
@@ -277,6 +305,10 @@ export class Func {
         return this.Parm(new IntType(), name);
     }
 
+    FloatParm(name: string) {
+        return this.Parm(new FloatType(), name);
+    }
+
     Return(returnType: TypeDef): Func {
         this.returnType = returnType;
         return this;
@@ -294,9 +326,6 @@ export class StructConst {
         this.vals = vals;
     }
 }
-
-// let structs: {[key: string]: StructDef} = {};
-
 
 export class Exporter {
     structs: Array<StructDef> = [];

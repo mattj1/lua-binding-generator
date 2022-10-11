@@ -1,4 +1,4 @@
-import {Exporter, IntType, ParmType, StringType} from "./c_types";
+import {BoolType, Exporter, IntType, ParmType, StringType} from "./c_types";
 import {LuaExporter} from "./LuaExporter";
 import {CExporter} from "./CExporter";
 
@@ -28,6 +28,11 @@ e.DefStructConst("RAYWHITE", Color,{r : 245, g : 245, b : 245, a : 255})
 let Vector2 = e.DefStruct("Vector2")
     .Float("x")
     .Float("y");
+
+e.DefGlobalFunction("IsKeyPressed").IntParm("key").Return(new BoolType())
+e.DefGlobalFunction("IsKeyDown").IntParm("key").Return(new BoolType())
+e.DefGlobalFunction("IsKeyReleased").IntParm("key").Return(new BoolType())
+e.DefGlobalFunction("IsKeyUp").IntParm("key").Return(new BoolType())
 
 // let VectorContainer = e.DefStruct("VectorContainer")
 //     .AddMember(new ParmType("vec", Vector2))
@@ -67,6 +72,12 @@ e.DefGlobalFunction("DrawText")
     .IntParm("posY")
     .IntParm("fontSize")
     .Parm(Color, "color")
+
+// e.DefGlobalFunction("rlRotatef")
+//     .FloatParm("angle")
+//     .FloatParm("x")
+//     .FloatParm("y")
+//     .FloatParm("z")
 
 let cExporter = new CExporter("test.c", e);
 cExporter.Run();

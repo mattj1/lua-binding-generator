@@ -111,7 +111,6 @@ export class CExporter {
                     let method_name = `${s.name}_${rw_methods[i]}_${m.name}`;
                     this.WriteC(`static int ${method_name}(lua_State *L) {`);
 
-
                     // if(!lua_isuserdata(L, -1)) {
                     //  ...
                     // }
