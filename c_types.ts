@@ -175,20 +175,22 @@ export class StructDef extends TypeDef {
 
 
         let s = "";
+        //
+        // s += `\tif(!lua_istable(L, ${stackPos})) {\n`;
+        // s += `\t\tprintf("${funcName}: Error: Not a table\\n");\n`
+        // s += `\t\treturn 0;\n`;
+        // s += `\t}\n`;
+        //
+        // s += `\tlua_pushstring(L, "@"); lua_rawget(L, ${stackPos - 1});\n`
+        //
+        // s += `\tif(!lua_isuserdata(L, -1)) {\n`;
+        // s += `\t\tprintf("${funcName}: Error: ${parm.name} is not userdata\\n");\n`;
+        // s += `\t\treturn 0;\n`;
+        // s += `\t}\n`;
+        //
+        // s += `\t${var_parm.ToString()} = (${var_parm.typeDef.name}) lua_touserdata(L, -1);\n`;
 
-        s += `\tif(!lua_istable(L, ${stackPos})) {\n`;
-        s += `\t\tprintf("${funcName}: Error: Not a table\\n");\n`
-        s += `\t\treturn 0;\n`;
-        s += `\t}\n`;
-
-        s += `\tlua_pushstring(L, "@"); lua_rawget(L, ${stackPos - 1});\n`
-
-        s += `\tif(!lua_isuserdata(L, -1)) {\n`;
-        s += `\t\tprintf("${funcName}: Error: ${parm.name} is not userdata\\n");\n`;
-        s += `\t\treturn 0;\n`;
-        s += `\t}\n`;
-
-        s += `\t${var_parm.ToString()} = (${var_parm.typeDef.name}) lua_touserdata(L, -1);\n`;
+        s = `\t${var_parm.ToString()} = load_struct_${this.name}(L, ${stackPos});\n`;
 
         return s;
     }

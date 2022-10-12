@@ -3,7 +3,7 @@ import {
     Func,
     LiteralExpression,
     ParmType,
-    PointerType,
+    PointerType, StructDef,
     StructuredProjectionExpression, VoidType
 } from "../c_types";
 import * as fs from "fs";
@@ -47,9 +47,9 @@ export class CExporter {
 
             this.WriteC('\t' + parm.generateLuaGetParm(var_parm, func.name, stackPos))
 
-            if(parm.typeDef.isStructType()) {
-                parm_stack_start -= 1;
-            }
+            // if(parm.typeDef.isStructType()) {
+            //     parm_stack_start -= 1;
+            // }
 
             // have to dereference if this parm isn't a pointer but the variable is
 
@@ -95,16 +95,65 @@ export class CExporter {
         let rw_methods = ["read", "write"];
 
         this.WriteC(`#include <cstring>`);
+        this.WriteC(`#include <cstdlib>`);
+        this.WriteC(`#include "raylib.h"`);
         this.WriteC(`#include "raylib.h"`);
         this.WriteC(`extern "C" {`);
         this.WriteC(`#include <lua/lauxlib.h>`);
         this.WriteC(`#include <lua/lualib.h>`);
         this.WriteC(`}`);
 
+        this.WriteC(`void *load_member_struct(lua_State *L, int n, const char *member_name) {
+    lua_getfield(L, n, member_name);
+    lua_pushstring(L, "@"); lua_rawget(L, -2);
+    
+    void *_val = lua_touserdata(L, -1);
+    lua_pop(L, 1); // pop userdata
+    lua_pop(L, 1); // pop field
+ 
+    return _val;
+}`);
+
+        for(let s of this.exporter.structs) {
+            let var_parm = new ParmType("_val", new PointerType(s));
+
+            this.WriteC(`${s.name} *load_struct_${s.name}(lua_State *L, int n) {`);
+            this.WriteC( `\tif(!lua_istable(L, n)) {`);
+            this.WriteC(`\t\tprintf("Error: Not a table\\n"); exit(0);`)
+            this.WriteC(`\t\treturn 0;`);
+            this.WriteC(`\t}`);
+
+            this.WriteC(`\tlua_pushstring(L, "@"); lua_rawget(L, n - 1);`);
+
+            this.WriteC(`\tif(!lua_isuserdata(L, -1)) {`);
+            this.WriteC(`\t\tprintf("Error: not userdata\\n"); exit(0);`);
+            this.WriteC(`\t\treturn 0;`);
+            this.WriteC(`\t}`);
+
+            this.WriteC(`\t${var_parm.ToString()} = (${var_parm.typeDef.name}) lua_touserdata(L, -1);`);
+            this.WriteC(`\tlua_pop(L, 1); // pop the userdata`)
+
+            for(let m of s.members) {
+                if(!(m.typeDef instanceof StructDef))
+                    continue;
+
+                let member_parm = new ParmType(`_${m.name}`, new PointerType(m.typeDef));
+
+                this.WriteC(`\t${member_parm.ToString()} = (${member_parm.typeDef.ToString()}) load_member_struct(L, n, \"${m.name}\");`);
+                this.WriteC(`\t_val->${m.name} = *${member_parm.name};`);
+            }
+
+            this.WriteC(`\t return ${var_parm.name};`);
+            this.WriteC(`}`);
+        }
+
         for(let s of this.exporter.structs) {
             let userdata_parm = new ParmType("_userdata", new PointerType(s));
 
             for (let m of s.members) {
+
+                if(m.typeDef instanceof StructDef)
+                    continue;
 
                 // auto x = val->x;
                 // _val->x
@@ -116,10 +165,6 @@ export class CExporter {
                     let method_name = `${s.name}_${rw_methods[i]}_${m.name}`;
                     this.WriteC(`static int ${method_name}(lua_State *L) {`);
 
-                    // if(!lua_isuserdata(L, -1)) {
-                    //  ...
-                    // }
-                    // "T * val = (T *) lua_touserdata(L, -1)"
                     this.WriteC(s.generateLuaTo(userdata_parm, method_name, m, stackPos[i]));
 
                     if(i == 0) {
@@ -128,7 +173,7 @@ export class CExporter {
                     } else {
                         let member_parm = new ParmType(`_${m.name}`, m.typeDef);
 
-                        this.WriteC('\t' + m.generateLuaGetParm(member_parm, "???", -2));
+                        this.WriteC('\t' + m.generateLuaGetParm(member_parm, "???", -1));
 
                         // "_val->x = x;"
                         this.WriteC(`\t${userdata_proj.ToString()} = ${member_parm.name};\n`);
@@ -157,6 +202,9 @@ export class CExporter {
         this.WriteC(`\tlua_getfield(L, -1, "@");`);
         for(let s of this.exporter.structs) {
             for (let m of s.members) {
+                if(m.typeDef instanceof StructDef)
+                    continue;
+
                 for(let i = 0; i < 2; i++) {
                     let method_name = `${s.name}_${rw_methods[i]}_${m.name}`;
                     this.WriteC(`\tlua_pushcfunction(L, ${method_name});`)

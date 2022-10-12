@@ -20,6 +20,26 @@ let Color = e.DefStruct("Color")
     .Int("a");
 
 /*
+typedef struct Camera2D {
+    Vector2 offset;         // Camera offset (displacement from target)
+    Vector2 target;         // Camera target (rotation and zoom origin)
+    float rotation;         // Camera rotation in degrees
+    float zoom;             // Camera zoom (scaling), should be 1.0f by default
+} Camera2D;
+ */
+
+
+let Vector2 = e.DefStruct("Vector2")
+    .Float("x")
+    .Float("y");
+
+let Camera2D = e.DefStruct("Camera2D")
+    .AddMember(new ParmType("offset", Vector2))
+    .AddMember(new ParmType("target", Vector2))
+    .Float("rotation")
+    .Float("zoom")
+
+/*
     // What if we didn't want to allocate data for stuff that's already in the header?
     // Allocate Color table, set light userdata to &RAYWHITE
 
@@ -28,9 +48,8 @@ e.DefStructConst("LIGHTGRAY", Color, { r:200, g:200, b:200, a:255 } )
 e.DefStructConst("BLUE", Color,{r : 0, g : 0, b : 245, a : 255})
 e.DefStructConst("RAYWHITE", Color,{r : 245, g : 245, b : 245, a : 255})
 
-let Vector2 = e.DefStruct("Vector2")
-    .Float("x")
-    .Float("y");
+e.DefGlobalFunction("BeginMode2D").Parm(Camera2D, "camera");
+e.DefGlobalFunction("EndMode2D")
 
 e.DefGlobalFunction("IsKeyPressed").IntParm("key").Return(new BoolType())
 e.DefGlobalFunction("IsKeyDown").IntParm("key").Return(new BoolType())
@@ -79,8 +98,7 @@ e.DefGlobalFunction("DrawText")
 raylib_enums(e);
 
 // rshapes
-// void DrawRectangle(int posX, int posY, int width, int height, Color color);
-
+e.DefGlobalFunction("DrawCircle").FloatParm("centerX").FloatParm("centerY").FloatParm("radius").Parm(Color, "color")
 e.DefGlobalFunction("DrawRectangle")
     .IntParm("posX")
     .IntParm("posY")

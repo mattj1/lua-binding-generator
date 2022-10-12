@@ -24,6 +24,9 @@ export class LuaExporter {
         this.WriteLua(`${s.name}.read_bindings = {}`);
         this.WriteLua(`${s.name}.write_bindings = {}`);
         for (let m of s.members) {
+            if(m.typeDef instanceof StructDef)
+                continue;
+
             // this.WriteLua(`${s.name}.read_bindings.${m.name} = function(t) return rl["@"]["${s.name}_read_${m.name}"](rawget(t, "@")) end`);
             this.WriteLua(`${s.name}.read_bindings.${m.name} = rl["@"]["${s.name}_read_${m.name}"]`);
             // this.WriteLua(`${s.name}.write_bindings.${m.name} = function(t, v) return rl["@"]["${s.name}_write_${m.name}"](rawget(t, "@"), v) end`);
@@ -35,9 +38,16 @@ export class LuaExporter {
     \t __newindex = function(t, k, v) ${s.name}.write_bindings[k](t, v) end
     }`);
 
+        this.WriteLua(`function ${s.name}:new(args)`);
+        this.WriteLua(`\tlocal o = {}`);
+        for (let m of s.members) {
+            if (!(m.typeDef instanceof StructDef))
+                continue;
+
+            this.WriteLua(`\to.${m.name} = ${m.typeDef.name}:new()`);
+        }
+
         this.WriteLua(`
-function ${s.name}:new(args)
-    o = {}
     setmetatable(o, ${s.name}.mt)
 
     d = rl["@"]["${s.name}_Alloc"]()
