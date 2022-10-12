@@ -51,10 +51,16 @@ e.DefStructConst("RAYWHITE", Color,{r : 245, g : 245, b : 245, a : 255})
 e.DefGlobalFunction("BeginMode2D").Parm(Camera2D, "camera");
 e.DefGlobalFunction("EndMode2D")
 
+e.DefGlobalFunction("GetScreenToWorld2D").Parm(Vector2, "position").Parm(Camera2D, "camera").Return(Vector2);
 e.DefGlobalFunction("IsKeyPressed").IntParm("key").Return(new BoolType())
 e.DefGlobalFunction("IsKeyDown").IntParm("key").Return(new BoolType())
 e.DefGlobalFunction("IsKeyReleased").IntParm("key").Return(new BoolType())
 e.DefGlobalFunction("IsKeyUp").IntParm("key").Return(new BoolType())
+
+e.DefGlobalFunction("IsMouseButtonDown").IntParm("button").Return(new BoolType())
+e.DefGlobalFunction("GetMousePosition").Return(Vector2)
+e.DefGlobalFunction("GetMouseDelta").Return(Vector2)
+
 
 // let VectorContainer = e.DefStruct("VectorContainer")
 //     .AddMember(new ParmType("vec", Vector2))
@@ -117,6 +123,11 @@ e.DefGlobalFunction("ColorAlpha").Parm(Color, "color").FloatParm("alpha").Return
 //     .FloatParm("x")
 //     .FloatParm("y")
 //     .FloatParm("z")
+
+// raymath
+
+e.DefGlobalFunction("Vector2Scale").Parm(Vector2, "v").FloatParm("scale").Return(Vector2)
+e.DefGlobalFunction("Vector2Add").Parm(Vector2, "v1").Parm(Vector2, "v2").Return(Vector2)
 
 let cExporter = new CExporter("/Users/mattj/projects/luatest/luatest/src/raylib_bindings1.cpp", e);
 cExporter.Run();

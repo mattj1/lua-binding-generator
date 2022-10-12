@@ -97,7 +97,7 @@ export class CExporter {
         this.WriteC(`#include <cstring>`);
         this.WriteC(`#include <cstdlib>`);
         this.WriteC(`#include "raylib.h"`);
-        this.WriteC(`#include "raylib.h"`);
+        this.WriteC(`#include "raymath.h"`);
         this.WriteC(`extern "C" {`);
         this.WriteC(`#include <lua/lauxlib.h>`);
         this.WriteC(`#include <lua/lualib.h>`);
