@@ -1,14 +1,11 @@
 import {
     Exporter,
-    FloatType,
     Func,
     LiteralExpression,
     ParmType,
     PointerType,
-    StructConst,
-    StructDef,
-    StructuredProjectionExpression
-} from "./c_types";
+    StructuredProjectionExpression, VoidType
+} from "../c_types";
 import * as fs from "fs";
 
 
@@ -29,13 +26,16 @@ export class CExporter {
 
     ExportGlobalFunction(func: Func) {
         this.WriteC(`static int l_${func.name}(lua_State *L) {`);
+
+        let parm_stack_start = -func.parms.length;
+
         let parm_count = func.parms.length;
         let args = [];
 
-        for (let parm_index in func.parms) {
+        for (let parm_index = 0; parm_index < func.parms.length; parm_index ++) {
             let parm = func.parms[parm_index];
 
-            let stackPos = -parm_count + parseInt(parm_index);
+            let stackPos = parm_stack_start + parm_index;
 
             let var_parm: ParmType;
 
@@ -46,6 +46,10 @@ export class CExporter {
             }
 
             this.WriteC('\t' + parm.generateLuaGetParm(var_parm, func.name, stackPos))
+
+            if(parm.typeDef.isStructType()) {
+                parm_stack_start -= 1;
+            }
 
             // have to dereference if this parm isn't a pointer but the variable is
 
@@ -60,7 +64,7 @@ export class CExporter {
 
         let return_parm: ParmType = null;
 
-        if (func.returnType) {
+        if (func.returnType && !(func.returnType instanceof VoidType)) {
             return_parm = new ParmType("returnVal", func.returnType);
             callStr += `${return_parm.ToString()} = `;
         }
@@ -71,6 +75,7 @@ export class CExporter {
 
         if (func.returnType) {
             this.WriteC("\t" + func.returnType.generateLuaPush(new LiteralExpression(return_parm)) + ";");
+
             if (!func.returnType.isConst && func.returnType.isPointerType()) {
                 this.WriteC(`\tfree(${return_parm.name});`)
             }

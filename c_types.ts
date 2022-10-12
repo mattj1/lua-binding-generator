@@ -36,6 +36,10 @@ abstract class TypeDef {
     ToString(): string {
         return `${this.name}`
     }
+
+    get TypeScriptTypeName(): string {
+        return "";
+    }
 }
 
 abstract class SimpleTypeDef extends TypeDef {
@@ -67,6 +71,10 @@ export class StringType extends TypeDef {
 
         return "char *";
     }
+
+    get TypeScriptTypeName(): string {
+        return "string";
+    }
 }
 
 export class IntType extends SimpleTypeDef {
@@ -82,6 +90,10 @@ export class IntType extends SimpleTypeDef {
     generateLuaPush(expr: Expr): string {
         return `lua_pushinteger(L, ${expr.ToString()})`;
     }
+
+    get TypeScriptTypeName(): string {
+        return "number";
+    }
 }
 
 export class BoolType extends SimpleTypeDef {
@@ -96,6 +108,10 @@ export class BoolType extends SimpleTypeDef {
     generateLuaPush(expr: Expr): string {
         return `lua_pushboolean(L, ${expr.ToString()})`;
     }
+
+    get TypeScriptTypeName(): string {
+        return "boolean";
+    }
 }
 
 export class FloatType extends SimpleTypeDef {
@@ -109,6 +125,10 @@ export class FloatType extends SimpleTypeDef {
 
     generateLuaPush(expr: Expr): string {
         return `lua_pushnumber(L, ${expr.ToString()})`;
+    }
+
+    get TypeScriptTypeName(): string {
+        return "number";
     }
 }
 
@@ -200,6 +220,29 @@ export class StructDef extends TypeDef {
 
     isStructType(): boolean {
         return true;
+    }
+
+    get TypeScriptTypeName(): string {
+        return this.name;
+    }
+}
+
+export class VoidType extends SimpleTypeDef {
+
+    constructor() {
+        super("void");
+    }
+
+    generateLuaPush(expr: Expr): string {
+        return "";
+    }
+
+    generateLuaTo(var_parm: ParmType, funcName: string, parm: ParmType, stackPos: number): string {
+        return "";
+    }
+
+    get TypeScriptTypeName(): string {
+        return "void";
     }
 }
 
@@ -294,6 +337,7 @@ export class Func {
     constructor(name: string) {
         this.name = name;
         this.parms = [];
+        this.returnType = new VoidType();
     }
 
     Parm(typeDef: TypeDef, name: string): Func {
@@ -327,10 +371,21 @@ export class StructConst {
     }
 }
 
+export class EnumDef {
+    name: string;
+    _enum: any;
+
+    constructor(name: string, _enum: any) {
+        this.name = name;
+        this._enum = _enum;
+    }
+}
+
 export class Exporter {
     structs: Array<StructDef> = [];
     globalFunctions: Array<Func> = [];
     structConsts: Array<StructConst> = []
+    enums: Array<EnumDef> = [];
 
     constructor() {
     }
@@ -349,5 +404,10 @@ export class Exporter {
 
     DefStructConst(name: string, structDef: StructDef, vals: any): any {
         this.structConsts.push(new StructConst(structDef, name, vals));
+    }
+
+    DefEnum(_enum: any, name: string) {
+        this.enums.push(new EnumDef(name, _enum));
+
     }
 }

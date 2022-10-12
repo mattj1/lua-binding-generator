@@ -1,4 +1,4 @@
-import {Exporter, StructConst, StructDef} from "./c_types";
+import {Exporter, StructConst, StructDef} from "../c_types";
 
 import * as fs from "fs";
 
@@ -72,6 +72,16 @@ end`);
             this.WriteLua(`____exports.${s.name} = ${s.structDef.name}:new({${parms.join(", ")}})`);
         }
 
+        for(let s of this.exporter.enums) {
+            this.WriteLua(`____exports.${s.name} = {`);
+
+
+            for(let k of Object.keys(s._enum).filter((v) => isNaN(Number(v)))) {
+                this.WriteLua(`\t${k} = ${s._enum[k]},`)
+            }
+
+            this.WriteLua(`}`)
+        }
         this.WriteLua("return ____exports")
         this.WriteLua("end")
 
