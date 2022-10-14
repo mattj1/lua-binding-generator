@@ -1,11 +1,23 @@
 import {DataSource} from "./DataSource";
 
 let keywords = ["void", "double", "float", "int"];
+let structs = {};
 let symbols = ["(", ")", "*"];
 
 export function Parse(ds: DataSource) {
     function IsKeyword() {
         return keywords.indexOf(ds.GetToken()) != -1;
+    }
+
+    function IsDataType() {
+        if (structs[ds.GetToken()] != undefined) {
+            return true;
+        }
+
+        if(IsKeyword())
+            return true;
+
+        return false;
     }
 
     function IsSymbol() {
@@ -19,12 +31,12 @@ export function Parse(ds: DataSource) {
     }
 
     function IsIdentifier() {
-        if(IsSymbol()) {
+        if (IsSymbol()) {
             // console.log("IsIdentifier, IsSymbol=true, so returning false")
             return false;
         }
 
-        if(IsKeyword())
+        if (IsKeyword())
             return false;
 
 
@@ -36,18 +48,25 @@ export function Parse(ds: DataSource) {
             return true;
         }
 
-        return IsKeyword();
+        if (structs[ds.GetToken()] != undefined) {
+            return true;
+        }
+
+        if (IsKeyword())
+            return true;
+
+        return false;
     }
 
 
     function ExpectKeyword() {
-        if(!IsKeyword()) {
+        if (!IsKeyword()) {
             throw "Expected: Keyword";
         }
     }
 
     function ExpectIdentifier() {
-        if(!IsIdentifier()) {
+        if (!IsIdentifier()) {
             throw "Expected: Keyword";
         }
 
@@ -55,17 +74,17 @@ export function Parse(ds: DataSource) {
     }
 
     function ExpectStr(s: string) {
-        if(!IsStr(s)) {
-            throw `Expected: '${s}'`;
+        if (!IsStr(s)) {
+            throw `Expected: '${s}', got '${ds.GetToken()}'`;
         }
     }
 
     function ParseDataType(firstToken: string) {
         let data_type = firstToken;
-        while(true) {
+        while (true) {
             ds.Next();
 
-            if(IsPartOfDataType()) {
+            if (IsPartOfDataType()) {
                 // console.log(`adding to data type: |${ds.GetToken()}|`);
                 data_type += " " + ds.GetToken();
             } else {
@@ -86,18 +105,18 @@ export function Parse(ds: DataSource) {
 
         ds.Next();
 
-        if(!IsStr("("))
+        if (!IsStr("("))
             throw "Expected: (";
 
         ds.Next();
         let first = true;
 
-        while(true){
+        while (true) {
 
-            if(IsStr(")"))
+            if (IsStr(")"))
                 break;
 
-            if(!first && IsStr(",")) {
+            if (!first && IsStr(",")) {
                 ds.Next();
             }
 
@@ -109,7 +128,7 @@ export function Parse(ds: DataSource) {
 
             // console.log(`got arg type: |${arg_type}|`);
 
-            if(arg_type == "void") {
+            if (arg_type == "void") {
                 ExpectStr(")");
                 break;
             }
@@ -127,16 +146,83 @@ export function Parse(ds: DataSource) {
         ExpectStr(";");
     }
 
+    function ParseStructMembers() {
+        console.log("ParseStructMembers")
+        ds.Next();
+        while(true) {
+            if(IsStr("}")) {
+                break;
+            }
+
+            let member_type = ParseDataType(ds.GetToken());
+            let member_name = ExpectIdentifier();
+            ds.Next();
+            ExpectStr(";")
+
+            console.log(`ParseStructMembers: got member ${member_type} ${member_name}`)
+            ds.Next();
+        }
+
+        ds.Next();
+        if(IsStr(";")) {
+            return;
+        }
+
+        let struct_type_name = ExpectIdentifier();
+
+        structs[struct_type_name] = "TEST";
+
+        console.log("ParseStructMembers struct type name: ", struct_type_name);
+        ds.Next();
+        ExpectStr(";")
+        // throw "TEST";
+    }
+
+    function ParseStruct() {
+        console.log("ParseStruct")
+        ds.Next();
+
+        if(IsStr("{")) {
+            ParseStructMembers();
+            return;
+        }
+
+        let struct_name = ExpectIdentifier();
+        console.log("ParseStruct struct name:", struct_name);
+        ds.Next();
+        ExpectStr("{")
+        ParseStructMembers();
+    }
+
+    function ParseTypedef() {
+        console.log("ParseTypedef");
+        ds.Next();
+        if(IsStr("struct")) {
+            ParseStruct();
+            return;
+        }
+    }
+
     function ParseNone() {
         // "Next" will tell us what we are doing...
         ds.Next();
+
+        if (IsStr("typedef")) {
+            ParseTypedef();
+            return;
+        }
+
+        if(IsDataType()) {
+            ParseFunctionDeclaration(ds.GetToken());
+            return;
+        }
 
         if (!IsKeyword()) {
             throw `Expected: Keyword. Got ${ds.GetToken()}`;
         }
 
         // TODO: "typedef", struct etc...
-        if(!IsKeyword) {
+        if (!IsKeyword()) {
             throw "Expected: Keyword";
         }
 
@@ -196,11 +282,11 @@ export function Parse(ds: DataSource) {
     while (true) {
         try {
             ParseNone();
-        } catch(e) {
+        } catch (e) {
             console.log("Error:")
             console.error(e);
 
-            if(e == "No more lines") {
+            if (e == "No more lines") {
                 console.log("Do stuff!");
             }
 

@@ -1,4 +1,4 @@
-const regex = /(\w+)|\*|\(|\)|(\/\/)|,|;/gm;
+const regex = /(\w+)|\*|\(|\)|(\/\/)|,|;|\{|\}/gm;
 
 let defines = {"RLAPI": ""}
 

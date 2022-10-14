@@ -23,5 +23,14 @@ RLAPI void rlOrtho(double left, double right, double bottom, double top, double 
 RLAPI void rlViewport(int x, int y, int width, int height); // Set the viewport area
 `
 
-let ds = new DataSource(rawData);
+let rawData2 = `
+// Vector2, 2 components
+typedef struct Vector2 {
+    float x;                // Vector x component
+    float y;                // Vector y component
+} Vector2;
+
+RLAPI Vector2 GetMousePosition(void);                         // Get mouse position XY
+`
+let ds = new DataSource(rawData2);
 Parse(ds);
