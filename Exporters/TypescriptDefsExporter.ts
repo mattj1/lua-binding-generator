@@ -55,8 +55,13 @@ export class TypescriptDefsExporter {
         for(let s of this.exporter.globalFunctions) {
             let args = [];
             for(let arg of s.parms) {
-                args.push(`${arg.name}: ${arg.typeDef.TypeScriptTypeName}`);
+                let optional = "";
+                if(arg.isOptional) {
+                    optional = "?"
+                }
+                args.push(`${arg.name}${optional}: ${arg.typeDef.TypeScriptTypeName}`);
             }
+
             this.Write(`\tfunction ${s.name}(${args.join(", ")}): ${s.returnType.TypeScriptTypeName};`)
         }
 

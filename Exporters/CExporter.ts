@@ -117,8 +117,9 @@ export class CExporter {
         for(let s of this.exporter.structs) {
             let var_parm = new ParmType("_val", new PointerType(s));
 
-            this.WriteC(`${s.name} *load_struct_${s.name}(lua_State *L, int n) {`);
+            this.WriteC(`${s.name} *load_struct_${s.name}(lua_State *L, int n, bool optional) {`);
             this.WriteC( `\tif(!lua_istable(L, n)) {`);
+            this.WriteC(`\t\tif(optional) return nullptr;`);
             this.WriteC(`\t\tprintf("Error: Not a table\\n"); exit(0);`)
             this.WriteC(`\t\treturn 0;`);
             this.WriteC(`\t}`);

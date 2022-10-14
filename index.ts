@@ -1,4 +1,13 @@
-import {BoolType, Exporter, IntType, ParmType, StringType} from "./c_types";
+import {
+    ArgumentIdentifier,
+    BoolType,
+    Exporter,
+    IntType,
+    OptionalArg,
+    ParmType,
+    PointerType,
+    StringType
+} from "./c_types";
 import {LuaExporter} from "./Exporters/LuaExporter";
 import {CExporter} from "./Exporters/CExporter";
 import {raylib_enums} from "./raylib_enums";
@@ -104,6 +113,15 @@ e.DefGlobalFunction("DrawText")
 raylib_enums(e);
 
 // rshapes
+// DrawPixel, DrawPixelV
+
+e.DefGlobalFunction("DrawLine")
+    .FloatParm("startPosX")
+    .FloatParm("startPosY")
+    .FloatParm("endPosX")
+    .FloatParm("endPosY")
+    .Parm(Color, "color")
+
 e.DefGlobalFunction("DrawCircle").FloatParm("centerX").FloatParm("centerY").FloatParm("radius").Parm(Color, "color")
 e.DefGlobalFunction("DrawRectangle")
     .IntParm("posX")
@@ -113,6 +131,14 @@ e.DefGlobalFunction("DrawRectangle")
     .Parm(Color, "color")
 
 e.DefGlobalFunction("DrawRectangleLinesEx").Parm(Rectangle, "rec").FloatParm("lineThick").Parm(Color, "color")
+
+e.DefGlobalFunction("CheckCollisionLines")
+    .Parm(Vector2, "startPos1")
+    .Parm(Vector2, "endPos1")
+    .Parm(Vector2, "startPos2")
+    .Parm(Vector2, "endPos2")
+    .Arg(OptionalArg(new ArgumentIdentifier("collisionPoint", new PointerType(Vector2))))
+    .Return(new BoolType())
 
 // rtextures
 

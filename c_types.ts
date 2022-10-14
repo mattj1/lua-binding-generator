@@ -157,42 +157,7 @@ export class StructDef extends TypeDef {
     }
 
     generateLuaTo(var_parm: ParmType, funcName: string, parm: ParmType, stackPos: number) {
-        /*
-                if(!lua_istable(L, -1)) {                                   (stackPos)
-                    printf("Color_read_r: Not a table\n");
-                    return 0;
-                }
-
-                lua_pushstring(L, "@"); lua_rawget(L, -2);                  (stackPos-1)
-
-                if(!lua_isuserdata(L, -1)) {                                (-1)
-                    printf("Color_read_r: Error: r is not userdata\n");
-                    return 0;
-                }
-
-                Color * _userdata = (Color *) lua_touserdata(L, -1);        (-1)
-         */
-
-
-        let s = "";
-        //
-        // s += `\tif(!lua_istable(L, ${stackPos})) {\n`;
-        // s += `\t\tprintf("${funcName}: Error: Not a table\\n");\n`
-        // s += `\t\treturn 0;\n`;
-        // s += `\t}\n`;
-        //
-        // s += `\tlua_pushstring(L, "@"); lua_rawget(L, ${stackPos - 1});\n`
-        //
-        // s += `\tif(!lua_isuserdata(L, -1)) {\n`;
-        // s += `\t\tprintf("${funcName}: Error: ${parm.name} is not userdata\\n");\n`;
-        // s += `\t\treturn 0;\n`;
-        // s += `\t}\n`;
-        //
-        // s += `\t${var_parm.ToString()} = (${var_parm.typeDef.name}) lua_touserdata(L, -1);\n`;
-
-        s = `\t${var_parm.ToString()} = load_struct_${this.name}(L, ${stackPos});\n`;
-
-        return s;
+        return `${var_parm.ToString()} = load_struct_${this.name}(L, ${stackPos}, false);`;
     }
 
     generateLuaPush(expr: Expr): string {
@@ -258,7 +223,11 @@ export class PointerType extends TypeDef {
     }
 
     generateLuaTo(var_parm: ParmType, funcName: string, parm: ParmType, stackPos: number) {
-        return "generateLuaTo ????";
+        // return "generateLuaTo ????";
+
+        // let isOptional = "false";
+
+        return `\t${var_parm.ToString()} = load_struct_${this.typeDef.name}(L, ${stackPos}, true);`;
     }
 
     generateLuaPush(expr: Expr): string {
@@ -274,6 +243,10 @@ export class PointerType extends TypeDef {
 
     isPointerType(): boolean {
         return true;
+    }
+
+    get TypeScriptTypeName(): string {
+        return this.typeDef.TypeScriptTypeName;
     }
 }
 
@@ -294,6 +267,19 @@ export class ParmType {
     ToString(): string {
         return `${this.typeDef.ToString()} ${this.name}`;
     }
+}
+
+export class ArgumentIdentifier extends ParmType {
+    isOptional: boolean;
+
+    constructor(name: string, typeDef: TypeDef) {
+        super(name, typeDef);
+    }
+}
+
+export function OptionalArg(arg: ArgumentIdentifier): ArgumentIdentifier {
+    arg.isOptional = true;
+    return arg;
 }
 
 export abstract class Expr {
@@ -333,7 +319,7 @@ export class StructuredProjectionExpression extends Expr {
 export class Func {
     name: string;
 
-    parms: ParmType[];
+    parms: ArgumentIdentifier[];
     returnType: TypeDef;
 
     constructor(name: string) {
@@ -342,8 +328,13 @@ export class Func {
         this.returnType = new VoidType();
     }
 
+    Arg(arg: ArgumentIdentifier) {
+        this.parms.push(arg);
+        return this;
+    }
+
     Parm(typeDef: TypeDef, name: string): Func {
-        this.parms.push(new ParmType(name, typeDef));
+        this.parms.push(new ArgumentIdentifier(name, typeDef));
         return this;
     }
 
