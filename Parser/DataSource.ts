@@ -40,11 +40,13 @@ export class DataSource {
 
     private NextLine() {
         this.current_line ++;
+        this.current_token = -1;
+
         if(this.current_line >= this.lines.length) {
             throw "No more lines";
         }
 
-        this.current_token = -1;
+
         let tokens = processTokens(this.lines[this.current_line]);
         // console.log(tokens);
         while(true) {
@@ -69,6 +71,7 @@ export class DataSource {
         }
 
         this.tokens = tokens;
+        // console.log("tokens: ", this.tokens);
     }
 
     GetToken() : string {
@@ -80,6 +83,7 @@ export class DataSource {
             this.current_token++;
             if (this.tokens[this.current_token] == undefined) {
                 this.NextLine();
+                continue;
             }
 
             let current_token = this.tokens[this.current_token]
