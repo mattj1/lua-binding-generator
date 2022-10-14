@@ -1,7 +1,7 @@
 import {
     ArgumentIdentifier,
     BoolType,
-    Exporter,
+    Exporter, FloatType,
     IntType,
     OptionalArg,
     ParmType,
@@ -151,9 +151,10 @@ e.DefGlobalFunction("ColorAlpha").Parm(Color, "color").FloatParm("alpha").Return
 //     .FloatParm("z")
 
 // raymath
-
 e.DefGlobalFunction("Vector2Scale").Parm(Vector2, "v").FloatParm("scale").Return(Vector2)
 e.DefGlobalFunction("Vector2Add").Parm(Vector2, "v1").Parm(Vector2, "v2").Return(Vector2)
+e.DefGlobalFunction("Vector2Distance").Parm(Vector2, "v1").Parm(Vector2, "v2").Return(new FloatType())
+e.DefGlobalFunction("Vector2DistanceSqr").Parm(Vector2, "v1").Parm(Vector2, "v2").Return(new FloatType())
 
 let cExporter = new CExporter("/Users/mattj/projects/luatest/luatest/src/raylib_bindings1.cpp", e);
 cExporter.Run();
