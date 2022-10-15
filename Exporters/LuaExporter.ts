@@ -1,53 +1,49 @@
-import {Exporter, StructConst, StructDef} from "../c_types";
+import {Exporter, StructDef} from "../c_types";
 
 import * as fs from "fs";
 
-export class LuaExporter {
-    luaPath: string;
-    luaFile: fs.WriteStream;
-    exporter: Exporter;
+export function ExportLua(exporter: Exporter, path: string, dryRun = false) {
 
-    constructor(filename: string, exporter: Exporter) {
-        this.luaPath = filename;
-        this.exporter = exporter;
-    }
+    let luaFile: fs.WriteStream;
 
-    WriteLua(s: String) {
+    function Write(s: String) {
         console.log(s);
-        this.luaFile.write(s + "\n");
+        if(!dryRun) {
+            luaFile.write(s + "\n");
+        }
     }
 
-    ExportStruct(s: StructDef) {
-        this.WriteLua(`-- ${s.name}`);
-        this.WriteLua(`local ${s.name} = {}`);
-        this.WriteLua(`${s.name}.prototype = {}`);
-        this.WriteLua(`${s.name}.read_bindings = {}`);
-        this.WriteLua(`${s.name}.write_bindings = {}`);
+    function ExportStruct(s: StructDef) {
+        Write(`-- ${s.name}`);
+        Write(`local ${s.name} = {}`);
+        Write(`${s.name}.prototype = {}`);
+        Write(`${s.name}.read_bindings = {}`);
+        Write(`${s.name}.write_bindings = {}`);
         for (let m of s.members) {
-            if(m.typeDef instanceof StructDef)
+            if (m.typeDef instanceof StructDef)
                 continue;
 
-            // this.WriteLua(`${s.name}.read_bindings.${m.name} = function(t) return rl["@"]["${s.name}_read_${m.name}"](rawget(t, "@")) end`);
-            this.WriteLua(`${s.name}.read_bindings.${m.name} = rl["@"]["${s.name}_read_${m.name}"]`);
-            // this.WriteLua(`${s.name}.write_bindings.${m.name} = function(t, v) return rl["@"]["${s.name}_write_${m.name}"](rawget(t, "@"), v) end`);
-            this.WriteLua(`${s.name}.write_bindings.${m.name} = rl["@"]["${s.name}_write_${m.name}"]`);
+            // Write(`${s.name}.read_bindings.${m.name} = function(t) return rl["@"]["${s.name}_read_${m.name}"](rawget(t, "@")) end`);
+            Write(`${s.name}.read_bindings.${m.name} = rl["@"]["${s.name}_read_${m.name}"]`);
+            // Write(`${s.name}.write_bindings.${m.name} = function(t, v) return rl["@"]["${s.name}_write_${m.name}"](rawget(t, "@"), v) end`);
+            Write(`${s.name}.write_bindings.${m.name} = rl["@"]["${s.name}_write_${m.name}"]`);
         }
 
-        this.WriteLua(`${s.name}.mt = {
+        Write(`${s.name}.mt = {
     \t __index = function(t, k) return ${s.name}.read_bindings[k](t) end,
     \t __newindex = function(t, k, v) ${s.name}.write_bindings[k](t, v) end
     }`);
 
-        this.WriteLua(`function ${s.name}:new(args)`);
-        this.WriteLua(`\tlocal o = {}`);
+        Write(`function ${s.name}:new(args)`);
+        Write(`\tlocal o = {}`);
         for (let m of s.members) {
             if (!(m.typeDef instanceof StructDef))
                 continue;
 
-            this.WriteLua(`\to.${m.name} = ${m.typeDef.name}:new()`);
+            Write(`\to.${m.name} = ${m.typeDef.name}:new()`);
         }
 
-        this.WriteLua(`
+        Write(`
     setmetatable(o, ${s.name}.mt)
 
     d = rl["@"]["${s.name}_Alloc"]()
@@ -59,45 +55,49 @@ export class LuaExporter {
      end
     return o
 end`);
-        this.WriteLua(`____exports.${s.name} = ${s.name}`)
+        Write(`____exports.${s.name} = ${s.name}`)
     }
 
-    Run() {
-        fs.truncateSync(this.luaPath, 0);
-        this.luaFile = fs.createWriteStream(this.luaPath);
+    if(!dryRun) {
+        fs.truncateSync(path, 0);
+        luaFile = fs.createWriteStream(path);
+    }
 
-        this.WriteLua("return function(____exports)")
+    Write("return function(____exports)")
 
-        for(let s of this.exporter.structs) {
-            this.ExportStruct(s);
+    for (let s of exporter.structs) {
+        ExportStruct(s);
+    }
+
+    for (let s of exporter.structConsts) {
+        let parms = [];
+        for (let member of s.structDef.members) {
+            parms.push(`${member.name} = ${s.vals[member.name]}`);
         }
 
-        for(let s of this.exporter.structConsts) {
-            let parms = [];
-            for(let member of s.structDef.members) {
-                parms.push(`${member.name} = ${s.vals[member.name]}`);
-            }
+        // ____exports.RAYWHITE = Color:new({r = 245, g = 245, b = 245, a = 255})
+        Write(`____exports.${s.name} = ${s.structDef.name}:new({${parms.join(", ")}})`);
+    }
 
-            // ____exports.RAYWHITE = Color:new({r = 245, g = 245, b = 245, a = 255})
-            this.WriteLua(`____exports.${s.name} = ${s.structDef.name}:new({${parms.join(", ")}})`);
+    for (let s of exporter.enums) {
+        Write(`____exports.${s.name} = {`);
+
+
+        for (let entry of s.entries) {
+            Write(`\t${entry.key} = ${entry.value},`)
         }
+        // for(let k of Object.keys(s._enum).filter((v) => isNaN(Number(v)))) {
+        //
+        // }
 
-        for(let s of this.exporter.enums) {
-            this.WriteLua(`____exports.${s.name} = {`);
+        Write(`}`)
+    }
+    Write("return ____exports")
+    Write("end")
 
-
-            for(let k of Object.keys(s._enum).filter((v) => isNaN(Number(v)))) {
-                this.WriteLua(`\t${k} = ${s._enum[k]},`)
-            }
-
-            this.WriteLua(`}`)
-        }
-        this.WriteLua("return ____exports")
-        this.WriteLua("end")
-
-        this.luaFile.on('finish', () => {
+    if(!dryRun) {
+        luaFile.on('finish', () => {
             console.log("done");
         });
     }
-
 }

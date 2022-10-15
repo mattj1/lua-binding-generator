@@ -1,5 +1,8 @@
 import {DataSource} from "./Parser/Datasource";
 import {Parse} from "./Parser/Parser";
+import {Exporter} from "./c_types";
+import {ExportC} from "./Exporters/CExporter";
+import {ExportLua} from "./Exporters/LuaExporter";
 
 let rawData = `
 
@@ -44,5 +47,10 @@ typedef enum {
     MOUSE_BUTTON_BACK    = 6,       // Mouse button back (advanced mouse device)
 } MouseButton;`
 
+let e = new Exporter();
+
 let ds = new DataSource(rawData3);
-Parse(ds);
+Parse(e, ds);
+
+ExportC(e, "", true);
+ExportLua(e, "", true);

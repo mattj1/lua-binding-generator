@@ -128,9 +128,9 @@ enum MouseButton {
     MOUSE_BUTTON_BACK    = 6,       // Mouse button back (advanced mouse device)
 }
 
-export function raylib_enums(e: Exporter) {
-    e.DefEnum(KeyboardKey, "KeyboardKey")
-    e.DefEnum(MouseButton, "MouseButton")
-}
+// export function raylib_enums(e: Exporter) {
+//     e.DefEnum(KeyboardKey, "KeyboardKey")
+//     e.DefEnum(MouseButton, "MouseButton")
+// }
 
 // ExportEnum(KeyboardKey);

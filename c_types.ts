@@ -364,13 +364,22 @@ export class StructConst {
     }
 }
 
+export class EnumEntry {
+    key: string;
+    value: string;
+
+    constructor(key: string, value: string) {
+        this.key = key;
+        this.value = value;
+    }
+}
+
 export class EnumDef {
     name: string;
-    _enum: any;
+    entries: Array<EnumEntry> = [];
 
-    constructor(name: string, _enum: any) {
+    constructor(name: string) {
         this.name = name;
-        this._enum = _enum;
     }
 }
 
@@ -399,8 +408,7 @@ export class Exporter {
         this.structConsts.push(new StructConst(structDef, name, vals));
     }
 
-    DefEnum(_enum: any, name: string) {
-        this.enums.push(new EnumDef(name, _enum));
-
-    }
+    // DefEnum(_enum: any, name: string) {
+    //     this.enums.push(new EnumDef(name, _enum));
+    // }
 }

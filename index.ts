@@ -8,9 +8,8 @@ import {
     PointerType,
     StringType
 } from "./c_types";
-import {LuaExporter} from "./Exporters/LuaExporter";
-import {CExporter} from "./Exporters/CExporter";
-import {raylib_enums} from "./raylib_enums";
+import {ExportC} from "./Exporters/CExporter";
+// import {raylib_enums} from "./raylib_enums";
 import {TypescriptDefsExporter} from "./Exporters/TypescriptDefsExporter";
 
 let e = new Exporter();
@@ -110,7 +109,7 @@ e.DefGlobalFunction("DrawText")
     .IntParm("fontSize")
     .Parm(Color, "color")
 
-raylib_enums(e);
+// raylib_enums(e);
 
 // rshapes
 // DrawPixel, DrawPixelV
@@ -156,11 +155,10 @@ e.DefGlobalFunction("Vector2Add").Parm(Vector2, "v1").Parm(Vector2, "v2").Return
 e.DefGlobalFunction("Vector2Distance").Parm(Vector2, "v1").Parm(Vector2, "v2").Return(new FloatType())
 e.DefGlobalFunction("Vector2DistanceSqr").Parm(Vector2, "v1").Parm(Vector2, "v2").Return(new FloatType())
 
-let cExporter = new CExporter("/Users/mattj/projects/luatest/luatest/src/raylib_bindings1.cpp", e);
-cExporter.Run();
+ExportC(e, "/Users/mattj/projects/luatest/luatest/src/raylib_bindings1.cpp", true);
 
-let luaExporter = new LuaExporter("/Users/mattj/projects/luatest/luatest/resources/raylib_bindings.lua", e);
-luaExporter.Run();
-
-let typescriptDefsExporter = new TypescriptDefsExporter("/Users/mattj/projects/luatest/luatest/ts/rl.d.ts", e);
-typescriptDefsExporter.Run();
+// let luaExporter = new LuaExporter("/Users/mattj/projects/luatest/luatest/resources/raylib_bindings.lua", e);
+// luaExporter.Run();
+//
+// let typescriptDefsExporter = new TypescriptDefsExporter("/Users/mattj/projects/luatest/luatest/ts/rl.d.ts", e);
+// typescriptDefsExporter.Run();

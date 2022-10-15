@@ -46,9 +46,12 @@ export class TypescriptDefsExporter {
 
         for(let s of this.exporter.enums) {
             this.Write(`\tenum ${s.name} {`);
-            for(let k of Object.keys(s._enum).filter((v) => isNaN(Number(v)))) {
-                this.Write(`\t\t${k} = ${s._enum[k]},`)
+            for(let entry of s.entries) {
+                this.Write(`\t\t${entry.key} = ${entry.value},`)
             }
+            // for(let k of Object.keys(s._enum).filter((v) => isNaN(Number(v)))) {
+            //     this.Write(`\t\t${k} = ${s._enum[k]},`)
+            // }
             this.Write(`\t}`);
         }
 

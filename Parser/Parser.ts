@@ -1,10 +1,11 @@
 import {DataSource} from "./DataSource";
+import {EnumDef, EnumEntry, Exporter} from "../c_types";
 
 let keywords = ["void", "double", "float", "int"];
 let structs = {};
 let symbols = ["(", ")", "*"];
 
-export function Parse(ds: DataSource) {
+export function Parse(e: Exporter, ds: DataSource) {
     function IsKeyword() {
         return keywords.indexOf(ds.GetToken()) != -1;
     }
@@ -196,6 +197,8 @@ export function Parse(ds: DataSource) {
 
     function ParseEnum() {
         console.log("ParseEnum");
+        let enumDef = new EnumDef("");
+
         ds.Next();
         ExpectStr("{");
         ds.Next();
@@ -205,17 +208,18 @@ export function Parse(ds: DataSource) {
                 break;
 
             let enum_identifier = ExpectIdentifier();
+
             ds.Next();
 
             if(IsStr("=")) {
                 ds.Next();
                 // TODO: need to be able to parse hex
+                let enumValStr = ds.GetToken();
                 enumVal = parseInt(ds.GetToken());
-                // console.log(`Setting enum val ${enum_identifier} = ${enumVal}`);
+                console.log(`Setting enum val ${enum_identifier} = ${enumVal}`);
+                enumDef.entries.push(new EnumEntry(enum_identifier, enumValStr))
                 ds.Next();
             }
-
-            console.log(`Setting enum val ${enum_identifier} = ${enumVal}`);
 
             enumVal ++;
 
@@ -226,12 +230,12 @@ export function Parse(ds: DataSource) {
 
         ds.Next();
 
-        let enum_name = ExpectIdentifier();
-        console.log(`Enum name: ${enum_name}`);
+        enumDef.name = ExpectIdentifier();
+        console.log(`Enum name: ${enumDef.name}`);
+        e.enums.push(enumDef);
 
         ds.Next();
         ExpectStr(";");
-
 
         throw "Done parsing enum";
     }
