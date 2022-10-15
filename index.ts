@@ -10,7 +10,6 @@ import {
 } from "./c_types";
 import {ExportC} from "./Exporters/CExporter";
 // import {raylib_enums} from "./raylib_enums";
-import {TypescriptDefsExporter} from "./Exporters/TypescriptDefsExporter";
 
 let e = new Exporter();
 

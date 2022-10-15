@@ -3,6 +3,7 @@ import {Parse} from "./Parser/Parser";
 import {Exporter} from "./c_types";
 import {ExportC} from "./Exporters/CExporter";
 import {ExportLua} from "./Exporters/LuaExporter";
+import {ExportTypescriptDefs} from "./Exporters/TypescriptDefsExporter";
 
 let rawData = `
 
@@ -54,3 +55,4 @@ Parse(e, ds);
 
 ExportC(e, "", true);
 ExportLua(e, "", true);
+ExportTypescriptDefs(e, "", true);
