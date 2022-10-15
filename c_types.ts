@@ -1,4 +1,4 @@
-abstract class TypeDef {
+export abstract class TypeDef {
     protected _name: string;
 
     get name(): string {
@@ -39,6 +39,10 @@ abstract class TypeDef {
 
     get TypeScriptTypeName(): string {
         return "";
+    }
+
+    setName(name: string) {
+        this._name = name;
     }
 }
 
@@ -81,6 +85,25 @@ export class IntType extends SimpleTypeDef {
 
     constructor() {
         super("int");
+    }
+
+    generateLuaTo(var_parm: ParmType, funcName: string, parm: ParmType, stackPos: number) {
+        return `${var_parm.ToString()} = lua_tointeger(L, ${stackPos});`
+    }
+
+    generateLuaPush(expr: Expr): string {
+        return `lua_pushinteger(L, ${expr.ToString()})`;
+    }
+
+    get TypeScriptTypeName(): string {
+        return "number";
+    }
+}
+
+export class CharType extends SimpleTypeDef {
+
+    constructor() {
+        super("char");
     }
 
     generateLuaTo(var_parm: ParmType, funcName: string, parm: ParmType, stackPos: number) {
@@ -381,34 +404,4 @@ export class EnumDef {
     constructor(name: string) {
         this.name = name;
     }
-}
-
-export class Exporter {
-    structs: Array<StructDef> = [];
-    globalFunctions: Array<Func> = [];
-    structConsts: Array<StructConst> = []
-    enums: Array<EnumDef> = [];
-
-    constructor() {
-    }
-
-    DefStruct(name: string): StructDef {
-        let s = new StructDef(name);
-        this.structs.push(s);
-        return s;
-    }
-
-    DefGlobalFunction(name: string): Func {
-        let s = new Func(name);
-        this.globalFunctions.push(s);
-        return s;
-    }
-
-    DefStructConst(name: string, structDef: StructDef, vals: any): any {
-        this.structConsts.push(new StructConst(structDef, name, vals));
-    }
-
-    // DefEnum(_enum: any, name: string) {
-    //     this.enums.push(new EnumDef(name, _enum));
-    // }
 }

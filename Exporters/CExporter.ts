@@ -1,5 +1,4 @@
 import {
-    Exporter,
     Func,
     LiteralExpression,
     ParmType,
@@ -7,6 +6,7 @@ import {
     StructuredProjectionExpression, VoidType
 } from "../c_types";
 import * as fs from "fs";
+import {Exporter} from "../Exporter";
 
 export function ExportC(exporter: Exporter, path: string, dryRun = false) {
 

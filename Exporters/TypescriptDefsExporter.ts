@@ -1,5 +1,5 @@
-import {Exporter} from "../c_types";
 import * as fs from "fs";
+import {Exporter} from "../Exporter";
 
 export function ExportTypescriptDefs(exporter: Exporter, path: string, dryRun = false) {
 

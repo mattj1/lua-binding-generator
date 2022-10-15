@@ -1,11 +1,67 @@
-import {DataSource} from "./DataSource";
-import {EnumDef, EnumEntry, Exporter} from "../c_types";
+import {DataSource, processTokens} from "./DataSource";
+import {
+    EnumDef,
+    EnumEntry,
+    FloatType,
+    Func,
+    IntType,
+    ParmType,
+    PointerType,
+    StructDef,
+    TypeDef,
+    VoidType
+} from "../c_types";
+import {Exporter} from "../Exporter";
 
 let keywords = ["void", "double", "float", "int"];
 let structs = {};
 let symbols = ["(", ")", "*"];
 
 export function Parse(e: Exporter, ds: DataSource) {
+
+    function ExporterDataTypeForTypeString(s: string): TypeDef {
+        let tokens = processTokens(s);
+        console.log("ExporterDataTypeForTypeString", tokens);
+        let pointerCount = 0;
+        for(let i = tokens.length-1; i >= 0; i--) {
+            if(tokens[i] == "*")
+                pointerCount ++;
+        }
+
+        let structDef = e.GetStructForName(tokens[0]);
+
+        let t;
+
+        if(structDef != null) {
+            t = structDef;
+        }
+
+        else if(tokens[0] == "float") {
+            t = new FloatType();
+        }
+
+        else if(tokens[0] == "int") {
+            t = new IntType();
+        }
+
+        else if(tokens[0] == "void") {
+            t = new VoidType();
+        }
+
+        if(t != null) {
+            for(let i = 0; i < pointerCount; i++) {
+                t = new PointerType(t);
+            }
+
+        }
+
+        if(t == null) {
+            throw `Invalid type: ${s}`;
+        }
+
+        return t;
+    }
+
     function IsKeyword() {
         return keywords.indexOf(ds.GetToken()) != -1;
     }
@@ -100,6 +156,10 @@ export function Parse(e: Exporter, ds: DataSource) {
     function ParseFunctionDeclaration(firstToken: string) {
         let data_type = ParseDataType(firstToken);
         let function_name = ds.GetToken();
+
+        let func = new Func(function_name);
+        func.returnType = ExporterDataTypeForTypeString(data_type);
+
         let args = [];
 
         console.log(`data type: ${data_type}, name: ${function_name}`);
@@ -138,16 +198,19 @@ export function Parse(e: Exporter, ds: DataSource) {
 
             console.log(`Arg: ${arg_type}, ${arg_name}`);
 
-            ds.Next();
+            func.Parm(ExporterDataTypeForTypeString(arg_type), arg_name);
 
-            // throw "TEST";
+            ds.Next();
         }
 
         ds.Next();
         ExpectStr(";");
+
+        e.globalFunctions.push(func);
+
     }
 
-    function ParseStructMembers() {
+    function ParseStructMembers(structDef: StructDef) {
         console.log("ParseStructMembers")
         ds.Next();
         while(true) {
@@ -161,6 +224,14 @@ export function Parse(e: Exporter, ds: DataSource) {
             ExpectStr(";")
 
             console.log(`ParseStructMembers: got member ${member_type} ${member_name}`)
+
+            let dt = ExporterDataTypeForTypeString(member_type);
+            if(dt == null) {
+                throw `type not supported: ${member_type}`;
+            } else {
+                structDef.AddMember(new ParmType(member_name, dt));
+            }
+
             ds.Next();
         }
 
@@ -170,29 +241,34 @@ export function Parse(e: Exporter, ds: DataSource) {
         }
 
         let struct_type_name = ExpectIdentifier();
+        structDef.setName(struct_type_name);
+        e.structs.push(structDef);
 
         structs[struct_type_name] = "TEST";
 
         console.log("ParseStructMembers struct type name: ", struct_type_name);
         ds.Next();
         ExpectStr(";")
-        // throw "TEST";
     }
 
     function ParseStruct() {
+        let structDef = new StructDef("");
+
         console.log("ParseStruct")
         ds.Next();
 
         if(IsStr("{")) {
-            ParseStructMembers();
+            ParseStructMembers(structDef);
             return;
         }
 
         let struct_name = ExpectIdentifier();
+        structDef.setName(struct_name);
+
         console.log("ParseStruct struct name:", struct_name);
         ds.Next();
         ExpectStr("{")
-        ParseStructMembers();
+        ParseStructMembers(structDef);
     }
 
     function ParseEnum() {
@@ -213,10 +289,9 @@ export function Parse(e: Exporter, ds: DataSource) {
 
             if(IsStr("=")) {
                 ds.Next();
-                // TODO: need to be able to parse hex
                 let enumValStr = ds.GetToken();
                 enumVal = parseInt(ds.GetToken());
-                console.log(`Setting enum val ${enum_identifier} = ${enumVal}`);
+                // console.log(`Setting enum val ${enum_identifier} = ${enumVal}`);
                 enumDef.entries.push(new EnumEntry(enum_identifier, enumValStr))
                 ds.Next();
             }
@@ -236,8 +311,6 @@ export function Parse(e: Exporter, ds: DataSource) {
 
         ds.Next();
         ExpectStr(";");
-
-        throw "Done parsing enum";
     }
 
     function ParseTypedef() {
@@ -288,10 +361,11 @@ export function Parse(e: Exporter, ds: DataSource) {
 
             if (e == "No more lines") {
                 console.log("Do stuff!");
+            } else {
+                throw "some other error";
             }
 
             break;
         }
     }
-// }
 }

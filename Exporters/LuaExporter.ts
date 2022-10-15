@@ -1,6 +1,7 @@
-import {Exporter, StructDef} from "../c_types";
+import {StructDef} from "../c_types";
 
 import * as fs from "fs";
+import {Exporter} from "../Exporter";
 
 export function ExportLua(exporter: Exporter, path: string, dryRun = false) {
 

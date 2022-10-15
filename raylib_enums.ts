@@ -1,5 +1,3 @@
-import {Exporter} from "./c_types";
-
 enum KeyboardKey {
     KEY_NULL            = 0,        // Key: NULL, used for no key pressed
     // Alphanumeric keys

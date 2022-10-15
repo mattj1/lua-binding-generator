@@ -1,7 +1,7 @@
 import {
     ArgumentIdentifier,
     BoolType,
-    Exporter, FloatType,
+    FloatType,
     IntType,
     OptionalArg,
     ParmType,
@@ -9,6 +9,7 @@ import {
     StringType
 } from "./c_types";
 import {ExportC} from "./Exporters/CExporter";
+import {Exporter} from "./Exporter";
 // import {raylib_enums} from "./raylib_enums";
 
 let e = new Exporter();

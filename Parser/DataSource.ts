@@ -71,7 +71,7 @@ export class DataSource {
         }
 
         this.tokens = tokens;
-        console.log("tokens: ", this.tokens);
+        // console.log("tokens: ", this.tokens);
     }
 
     GetToken() : string {
