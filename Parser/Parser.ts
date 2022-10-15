@@ -194,17 +194,63 @@ export function Parse(ds: DataSource) {
         ParseStructMembers();
     }
 
+    function ParseEnum() {
+        console.log("ParseEnum");
+        ds.Next();
+        ExpectStr("{");
+        ds.Next();
+        let enumVal = 0;
+        while(true) {
+            if(IsStr("}"))
+                break;
+
+            let enum_identifier = ExpectIdentifier();
+            ds.Next();
+
+            if(IsStr("=")) {
+                ds.Next();
+                // TODO: need to be able to parse hex
+                enumVal = parseInt(ds.GetToken());
+                // console.log(`Setting enum val ${enum_identifier} = ${enumVal}`);
+                ds.Next();
+            }
+
+            console.log(`Setting enum val ${enum_identifier} = ${enumVal}`);
+
+            enumVal ++;
+
+            if(IsStr(",")) {
+                ds.Next();
+            }
+        }
+
+        ds.Next();
+
+        let enum_name = ExpectIdentifier();
+        console.log(`Enum name: ${enum_name}`);
+
+        ds.Next();
+        ExpectStr(";");
+
+
+        throw "Done parsing enum";
+    }
+
     function ParseTypedef() {
         console.log("ParseTypedef");
         ds.Next();
-        if(IsStr("struct")) {
-            ParseStruct();
-            return;
+        switch (ds.GetToken()) {
+            case "struct":
+                ParseStruct();
+                return;
+            case "enum":
+                ParseEnum();
+                return;
+
         }
     }
 
     function ParseNone() {
-        // "Next" will tell us what we are doing...
         ds.Next();
 
         if (IsStr("typedef")) {
@@ -217,13 +263,10 @@ export function Parse(ds: DataSource) {
             return;
         }
 
+        // TODO: "typedef", struct etc...
+
         if (!IsKeyword()) {
             throw `Expected: Keyword. Got ${ds.GetToken()}`;
-        }
-
-        // TODO: "typedef", struct etc...
-        if (!IsKeyword()) {
-            throw "Expected: Keyword";
         }
 
         ParseFunctionDeclaration(ds.GetToken());
@@ -232,53 +275,6 @@ export function Parse(ds: DataSource) {
         // throw "TEST";
     }
 
-// export function Parse(ds: DataSource) {
-
-//
-//
-// console.log(tokens);
-//
-// index = -1;
-//
-// let return_type = expectDataType(false);
-//
-// if(!isIdentifier()) {
-//     throw "Expected: identifier";
-// }
-//
-// let method_name = currentToken();
-//
-// expectStr("(", false);
-// index ++;
-//
-// while(true) {
-//     // console.log("arg check", currentToken());
-//     if(isStr(")"))
-//         break;
-//
-//     let arg_type = expectDataType(true);
-//     console.log("arg type:", arg_type);
-//
-//     if(!isIdentifier()) {
-//         throw "Expected: identifier name";
-//     }
-//
-//     let arg_name = currentToken();
-//     console.log("arg name:", arg_name);
-//
-//     index ++;
-//
-//     if(isStr(")"))
-//         break;
-//
-//     expectStr(",", true);
-//     index ++;
-//
-//     // break;
-// }
-//
-// console.log("return type:", return_type);
-// console.log("method name", method_name);
     while (true) {
         try {
             ParseNone();
