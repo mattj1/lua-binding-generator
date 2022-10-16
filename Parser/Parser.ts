@@ -227,20 +227,30 @@ export function Parse(e: Exporter, ds: DataSource) {
             }
 
             let member_type = ParseDataType(ds.GetToken());
-            let member_name = ExpectIdentifier();
-            ds.Next();
-            ExpectStr(";")
 
-            console.log(`ParseStructMembers: got member ${member_type} ${member_name}`)
+            while(true) {
+                let member_name = ExpectIdentifier();
 
-            let dt = ExporterDataTypeForTypeString(member_type);
-            if(dt == null) {
-                throw `type not supported: ${member_type}`;
-            } else {
-                structDef.AddMember(new ParmType(member_name, dt));
+                console.log(`ParseStructMembers: got member ${member_type} ${member_name}`)
+
+                let dt = ExporterDataTypeForTypeString(member_type);
+                if (dt == null) {
+                    throw `type not supported: ${member_type}`;
+                } else {
+                    structDef.AddMember(new ParmType(member_name, dt));
+                }
+
+                ds.Next();
+
+                if(IsStr(";")) {
+                    ds.Next();
+                    break;
+                }
+
+                ExpectStr(",");
+
+                ds.Next();
             }
-
-            ds.Next();
         }
 
         ds.Next();

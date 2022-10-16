@@ -22,6 +22,9 @@ export class Exporter {
     }
 
     DefStructConst(name: string, structDef: StructDef, vals: any): any {
+        if(structDef == null) {
+            throw `struct not found`;
+        }
         this.structConsts.push(new StructConst(structDef, name, vals));
     }
 
