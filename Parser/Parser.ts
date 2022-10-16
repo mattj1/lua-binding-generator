@@ -1,19 +1,20 @@
 import {DataSource, processTokens} from "./DataSource";
 import {
+    BoolType,
     EnumDef,
     EnumEntry,
     FloatType,
     Func,
     IntType,
     ParmType,
-    PointerType,
+    PointerType, StringType,
     StructDef,
     TypeDef,
     VoidType
 } from "../c_types";
 import {Exporter} from "../Exporter";
 
-let keywords = ["void", "double", "float", "int"];
+let keywords = ["void", "double", "float", "int", "unsigned", "char", "bool", "const"];
 let structs = {};
 let symbols = ["(", ")", "*"];
 
@@ -32,24 +33,26 @@ export function Parse(e: Exporter, ds: DataSource) {
 
         let t;
 
-        if(structDef != null) {
+        if(tokens.length == 3 && tokens[0] == "const" && tokens[1] == "char" && tokens[2] == "*") {
+            t = new StringType();
+            pointerCount = 0; // hack
+            t.isConst = true;
+        }
+        else if (structDef != null) {
             t = structDef;
-        }
-
-        else if(tokens[0] == "float") {
+        } else if (tokens[0] == "bool") {
+            t = new BoolType();
+        } else if (tokens[0] == "float") {
             t = new FloatType();
-        }
-
-        else if(tokens[0] == "int") {
+        } else if (tokens[0] == "int") {
             t = new IntType();
-        }
-
-        else if(tokens[0] == "void") {
+        } else if (tokens[0] == "unsigned" && tokens[1] == "char") {
+            t = new IntType();
+        } else if (tokens[0] == "void") {
             t = new VoidType();
         }
-
-        if(t != null) {
-            for(let i = 0; i < pointerCount; i++) {
+        if (t != null) {
+            for (let i = 0; i < pointerCount; i++) {
                 t = new PointerType(t);
             }
 
@@ -115,6 +118,11 @@ export function Parse(e: Exporter, ds: DataSource) {
         return false;
     }
 
+    function ExpectPartOfDataType() {
+        if(!IsPartOfDataType()) {
+            throw "Expected: Part of data type";
+        }
+    }
 
     function ExpectKeyword() {
         if (!IsKeyword()) {
@@ -124,7 +132,7 @@ export function Parse(e: Exporter, ds: DataSource) {
 
     function ExpectIdentifier() {
         if (!IsIdentifier()) {
-            throw "Expected: Keyword";
+            throw "Expected: Identifier";
         }
 
         return ds.GetToken();
@@ -183,7 +191,7 @@ export function Parse(e: Exporter, ds: DataSource) {
 
             first = false;
 
-            ExpectKeyword();
+            ExpectPartOfDataType();
 
             let arg_type = ParseDataType(ds.GetToken());
 

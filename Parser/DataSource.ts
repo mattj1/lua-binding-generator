@@ -1,6 +1,6 @@
 const regex = /(\w+)|\*|\(|\)|(\/\/)|,|;|\{|\}|\=/gm;
 
-let defines = {"RLAPI": ""}
+let defines = {"RLAPI": "", "RMAPI": ""}
 
 export function processTokens(str): Array<string> {
     let _tokens = [];
