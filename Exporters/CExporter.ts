@@ -94,6 +94,7 @@ export function ExportC(exporter: Exporter, path: string, dryRun = false) {
     WriteC(`#include <cstring>`);
     WriteC(`#include <cstdlib>`);
     WriteC(`#include "raylib.h"`);
+    WriteC(`#include "rlgl.h"`);
     WriteC(`#include "raymath.h"`);
     WriteC(`extern "C" {`);
     WriteC(`#include <lua/lauxlib.h>`);
