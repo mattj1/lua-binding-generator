@@ -378,7 +378,7 @@ export function Parse(e: Exporter, ds: DataSource) {
             console.error(e);
 
             if (e == "No more lines") {
-                console.log("Do stuff!");
+                console.log("Will now export...");
             } else {
                 throw "some other error";
             }
