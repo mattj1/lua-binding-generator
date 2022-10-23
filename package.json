@@ -2,8 +2,10 @@
   "name": "lua-binding-generator",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -17,6 +19,13 @@
   },
   "homepage": "https://github.com/mattj1/lua-binding-generator#readme",
   "devDependencies": {
+    "@types/fs-extra": "^8.1.0",
     "ts-node": "^10.9.1"
-  }
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.lua",
+    "dist/**/*.ts",
+    "dist/lualib/**/*.json"
+  ]
 }

@@ -8,14 +8,18 @@ import {
 import * as fs from "fs";
 import {Exporter} from "../Exporter";
 
-export function ExportC(exporter: Exporter, path: string, dryRun = false) {
+export interface ExportWriter {
+    Write(s: String);
+}
 
-    let cFile: fs.WriteStream;
+export function ExportC(exporter: Exporter, exportWriter: ExportWriter, dryRun = false) {
 
+    // let cFile: fs.WriteStream;
     function WriteC(s: String) {
         console.log(`${s}`)
         if(!dryRun) {
-            cFile.write(s + "\n");
+            exportWriter?.Write(s + "\n");
+            // cFile.write(s + "\n");
         }
     }
 
@@ -84,10 +88,10 @@ export function ExportC(exporter: Exporter, path: string, dryRun = false) {
         WriteC(`}`);
     }
 
-    if(!dryRun) {
-        fs.truncateSync(path, 0);
-        cFile = fs.createWriteStream(path);
-    }
+    // if(!dryRun) {
+    //     fs.truncateSync(path, 0);
+    //     cFile = fs.createWriteStream(path);
+    // }
 
     let rw_methods = ["read", "write"];
 
@@ -226,9 +230,9 @@ export function ExportC(exporter: Exporter, path: string, dryRun = false) {
     WriteC(`}\n`);
 
     if(!dryRun) {
-        cFile.on('finish', () => {
-            console.log("done");
-        });
+        // cFile.on('finish', () => {
+        //     console.log("done");
+        // });
     }
 
     // fs.closeSync(cFile);
