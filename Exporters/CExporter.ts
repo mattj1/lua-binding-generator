@@ -7,10 +7,7 @@ import {
 } from "../c_types";
 import * as fs from "fs";
 import {Exporter} from "../Exporter";
-
-export interface ExportWriter {
-    Write(s: String);
-}
+import {ExportWriter} from "../Util";
 
 export function ExportC(exporter: Exporter, exportWriter: ExportWriter, dryRun = false) {
 

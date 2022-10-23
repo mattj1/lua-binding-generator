@@ -1,3 +1,5 @@
+import {ParserOptions} from "../Util";
+
 const regex = /(\w+)|\*|\(|\)|(\/\/)|,|;|\{|\}|\=|\#/gm;
 
 let defines = {"RLAPI": "", "RMAPI": ""}
@@ -44,9 +46,6 @@ export function processTokens(str): Array<string> {
     return tokens2;
 }
 
-interface ParserOptions {
-    OnDefine? : (k: string, v: string) => void;
-}
 
 export class DataSource {
     lines = [];
